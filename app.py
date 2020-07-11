@@ -58,7 +58,7 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    wait(delay)
+    time.sleep(delay)
     
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'])
