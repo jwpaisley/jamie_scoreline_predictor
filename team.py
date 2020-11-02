@@ -27,12 +27,13 @@ class Team:
         home_goals, away_goals = 0.0, 0.0
         home_games, away_games = 0, 0
         for fixture in self.recent_fixtures:
-            if fixture['homeTeam']['team_id'] == self.id:
-                home_games += 1
-                home_goals += fixture['goalsHomeTeam']
-            else:
-                away_games += 1
-                away_goals += fixture['goalsAwayTeam']
+            if fixture['status'] == 'Match Finished':
+                if fixture['homeTeam']['team_id'] == self.id:
+                    home_games += 1
+                    home_goals += fixture['goalsHomeTeam']
+                else:
+                    away_games += 1
+                    away_goals += fixture['goalsAwayTeam']
 
         self.home_atk = home_goals / home_games
         self.away_atk = away_goals / away_games
@@ -41,12 +42,13 @@ class Team:
         home_goals, away_goals = 0.0, 0.0
         home_games, away_games = 0, 0
         for fixture in self.recent_fixtures:
-            if fixture['homeTeam']['team_id'] == self.id:
-                away_games += 1
-                away_goals += fixture['goalsAwayTeam']
-            else:
-                home_games += 1
-                home_goals += fixture['goalsHomeTeam']
+            if fixture['status'] == 'Match Finished':
+                if fixture['homeTeam']['team_id'] == self.id:
+                    away_games += 1
+                    away_goals += fixture['goalsAwayTeam']
+                else:
+                    home_games += 1
+                    home_goals += fixture['goalsHomeTeam']
                 
         self.home_def = home_goals / home_games
         self.away_def = away_goals / away_games

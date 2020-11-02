@@ -12,6 +12,7 @@ from utils import headers
 twitter_client = TwitterClient()
 load_dotenv()
 LEAGUE_ID = os.getenv("LEAGUE_ID")
+LEAGUE_ID_HISTORIC = os.getenv("LEAGUE_ID_HISTORIC")
 
 def get_utc_timestamp():
     return int(datetime.utcnow().timestamp())
@@ -36,14 +37,14 @@ def get_league_averages(league_results):
 def get_results_for_league(league_id):
     results = requests.request(
         "GET", 
-        "https://api-football-v1.p.rapidapi.com/v2/fixtures/league/{lid}".format(lid=league_id), 
+        "https://api-football-v1.p.rapidapi.com/v2/fixtures/league/{league_id}".format(league_id=league_id), 
         headers=headers
     ).json()['api']['fixtures']
 
     return results
 
 def get_fixtures_by_day(league_id, day):
-    route = "https://api-football-v1.p.rapidapi.com/v2/fixtures/league/524/{date}".format(date=day)
+    route = "https://api-football-v1.p.rapidapi.com/v2/fixtures/league/{league_id}/{date}".format(league_id=league_id, date=day)
     fixtures = requests.request(
         "GET", 
         route,
@@ -58,7 +59,7 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    time.sleep(delay)
+    # time.sleep(delay)
     
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'])
@@ -88,11 +89,10 @@ def expected_value(mu):
         poisson_list.append(P)
     return poisson_list.index(max(poisson_list))
 
-league_results = get_results_for_league(LEAGUE_ID)
+league_results = get_results_for_league(LEAGUE_ID_HISTORIC)
 league_averages = get_league_averages(league_results)
-league_averages = {'away_goals': 1.2526315789473683, 'home_goals': 1.568421052631579}
-fixtures = get_fixtures_by_day(542, current_utc_day().strftime('%Y-%m-%d'))
+fixtures = get_fixtures_by_day(LEAGUE_ID, "2020-11-07")
 
 for fixture in fixtures:
-    delay = datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15)
+    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.now()).total_seconds()
     make_prediction(delay, fixture)
