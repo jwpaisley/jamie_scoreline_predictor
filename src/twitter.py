@@ -18,6 +18,10 @@ class TwitterClient:
         self.auth.set_access_token(TOKEN, TOKEN_SECRET)
         self.api = tweepy.API(self.auth, wait_on_rate_limit = True)
 
-    def tweet(self, message):
-        self.api.update_status(message)
+    def upload_image(self, file):
+        media = self.api.media_upload(file)
+        return media
 
+    def tweet(self, message, media=None):
+        if media: self.api.update_status(message, media_ids=[media.media_id])
+        else: self.api.update_status(message)

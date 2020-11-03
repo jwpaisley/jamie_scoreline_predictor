@@ -2,10 +2,11 @@ import requests
 import time
 import os
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time as dt_time
 from dateutil import parser
 from dotenv import load_dotenv
 from team import Team
+from image import build_image
 from twitter import TwitterClient
 from utils import headers
 
@@ -59,7 +60,7 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    # time.sleep(delay)
+    time.sleep(60)
     
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'])
@@ -67,16 +68,21 @@ def make_prediction(delay, fixture):
     home_goals = predict_goals(home_team.home_atk, away_team.away_def, league_averages['home_goals'])
     away_goals = predict_goals(away_team.away_atk, home_team.home_def, league_averages['away_goals'])
 
-    pred_home_goals = expected_value(home_goals)
-    pred_away_goals = expected_value(away_goals)
+    pred_home_goals, home_poisson = expected_value(home_goals)
+    pred_away_goals, away_poisson = expected_value(away_goals)
 
-    prediction = 'Prediction: {} {}, {} {}'.format(
+    prediction = 'Prediction: {} {}, {} {} #{}{} #PremierLeague'.format(
         home_team.name, 
         pred_home_goals, 
         away_team.name, 
-        pred_away_goals
+        pred_away_goals,
+        Team.shorthand[home_team.name],
+        Team.shorthand[away_team.name]
     )
-    # twitter_client.tweet(prediction)
+
+    build_image(home_team.name, away_team.name, home_poisson, away_poisson)
+    # media = twitter_client.upload_image("img/prediction.png")
+    # twitter_client.tweet(prediction, media)
     print(prediction)
 
 def poisson(mu, x):
@@ -87,12 +93,17 @@ def expected_value(mu):
     for i in range(0, 6):
         P = poisson(mu, i)
         poisson_list.append(P)
-    return poisson_list.index(max(poisson_list))
+    return (poisson_list.index(max(poisson_list)), poisson_list)
 
-league_results = get_results_for_league(LEAGUE_ID_HISTORIC)
-league_averages = get_league_averages(league_results)
-fixtures = get_fixtures_by_day(LEAGUE_ID, "2020-11-07")
+while True:
+    today = datetime.now().strftime("%Y-%m-%d")
+    league_results = get_results_for_league(LEAGUE_ID_HISTORIC)
+    league_averages = get_league_averages(league_results)
+    fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 
-for fixture in fixtures:
-    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.now()).total_seconds()
-    make_prediction(delay, fixture)
+    for fixture in fixtures:
+        delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.now()).total_seconds()
+        make_prediction(delay, fixture)
+
+    midnight = datetime.combine((datetime.today() + timedelta(days=1)), dt_time.min)
+    time.sleep(seconds_to(midnight))

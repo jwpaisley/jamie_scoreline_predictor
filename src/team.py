@@ -7,6 +7,29 @@ load_dotenv()
 FIXTURES = os.getenv("FIXTURES")
 
 class Team:
+    shorthand = {
+        "Arsenal": "ARS",
+        "Aston Villa": "AVL",
+        "Brighton": "BHA",
+        "Burnley": "BUR",
+        "Chelsea": "CHE",
+        "Crystal Palace": "CPL",
+        "Everton": "EVE",
+        "Fulham": "FUL",
+        "Leeds": "LEE",
+        "Leicester": "LEI",
+        "Liverpool": "LIV",
+        "Manchester City": "MCI",
+        "Manchester United": "MUN",
+        "Newcastle": "NEW",
+        "Sheffield Utd": "SHU",
+        "Southampton": "SOU",
+        "Tottenham": "TOT",
+        "West Brom": "WBA",
+        "West Ham": "WHU",
+        "Wolves": "WOL"
+    }
+
     def __init__(self, id, name):
         self.id = id
         self.name = name
