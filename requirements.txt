@@ -2,3 +2,5 @@ numpy==1.18.5
 Pillow==7.2.0
 requests==2.23.0
 tweepy==3.8.0
+python-dateutil==2.8.1
+python-dotenv==0.13.0
