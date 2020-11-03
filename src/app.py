@@ -81,9 +81,8 @@ def make_prediction(delay, fixture):
     )
 
     build_image(home_team.name, away_team.name, home_poisson, away_poisson)
-    # media = twitter_client.upload_image("img/prediction.png")
-    # twitter_client.tweet(prediction, media)
-    print(prediction)
+    media = twitter_client.upload_image("img/prediction.png")
+    twitter_client.tweet(prediction, media)
 
 def poisson(mu, x):
     return ((2.71828**(-1*mu))*(mu**x))/(math.factorial(x))
