@@ -10,8 +10,8 @@ def pretty_percent(percent):
 
 def add_teams(base, home_team, away_team):
     # open team crests and paste into final scoreline prediction positions
-    home_img = Image.open("img/teams/{}.png".format(home_team)).convert("RGBA")
-    away_img = Image.open("img/teams/{}.png".format(away_team)).convert("RGBA")
+    home_img = Image.open("src/img/teams/{}.png".format(home_team)).convert("RGBA")
+    away_img = Image.open("src/img/teams/{}.png".format(away_team)).convert("RGBA")
     home_img = home_img.resize((300, 300), Image.ANTIALIAS)
     away_img = away_img.resize((300, 300), Image.ANTIALIAS)
     base.paste(home_img, (450, 935), mask=home_img)
@@ -25,7 +25,7 @@ def add_teams(base, home_team, away_team):
 
 def add_score(base, score):
     draw = ImageDraw.Draw(base)
-    font = ImageFont.truetype('font.ttf', 200)
+    font = ImageFont.truetype('src/font.ttf', 200)
     draw.text((900, 925), score, (255, 255, 255), font=font)
 
 def add_poisson(base, poisson1, poisson2):
@@ -34,14 +34,14 @@ def add_poisson(base, poisson1, poisson2):
         [(250, 560), (550, 560), (850, 560), (1150, 560), (1450, 560), (1750, 560)]
     ]
     draw = ImageDraw.Draw(base)
-    font = ImageFont.truetype('font.ttf', 50)
+    font = ImageFont.truetype('src/font.ttf', 50)
     for idx, percent in enumerate(poisson1):
         draw.text(positions[0][idx], pretty_percent(percent), (255, 255, 255), font=font)
     for idx, percent in enumerate(poisson2):
         draw.text(positions[1][idx], pretty_percent(percent), (255, 255, 255), font=font)
 
 def add_circles(base, home_score, away_score):
-    circle = Image.open("img/circle.png").convert("RGBA")
+    circle = Image.open("src/img/circle.png").convert("RGBA")
     circle = circle.resize((175, 100), Image.ANTIALIAS)
     base.paste(circle, (225 + (home_score * 300), 300), mask=circle)
     base.paste(circle, (225 + (away_score * 300), 550), mask=circle)
@@ -52,11 +52,11 @@ def add_circles(base, home_score, away_score):
         base.paste(circle, position, mask=circle)
 
 def build_image(home_team, away_team, poisson1, poisson2):
-    base = Image.open("img/poisson.png").convert("RGBA")
+    base = Image.open("src/img/poisson.png").convert("RGBA")
     home_score = poisson1.index(max(poisson1))
     away_score = poisson2.index(max(poisson2))
     add_teams(base, home_team, away_team)
     add_score(base, "{}-{}".format(home_score, away_score))
     add_poisson(base, poisson1, poisson2)
     add_circles(base, home_score, away_score)
-    base.save("img/prediction.png")
+    base.save("src/img/prediction.png")

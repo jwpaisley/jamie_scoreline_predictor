@@ -15,6 +15,13 @@ load_dotenv()
 LEAGUE_ID = os.getenv("LEAGUE_ID")
 LEAGUE_ID_HISTORIC = os.getenv("LEAGUE_ID_HISTORIC")
 
+def wait(seconds):
+    loader = "◄▲►▼"
+    while seconds > 0:
+        time.sleep(1)
+        seconds -= 1
+        print("{} delaying until midnight ({} sec)\r".format(loader[seconds % 4], seconds), end="")
+
 def get_utc_timestamp():
     return int(datetime.utcnow().timestamp())
 
@@ -60,7 +67,7 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    time.sleep(60)
+    time.sleep(max(delay, 0))
     
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'])
@@ -81,8 +88,9 @@ def make_prediction(delay, fixture):
     )
 
     build_image(home_team.name, away_team.name, home_poisson, away_poisson)
-    media = twitter_client.upload_image("img/prediction.png")
+    media = twitter_client.upload_image("src/img/prediction.png")
     twitter_client.tweet(prediction, media)
+    print(prediction)
 
 def poisson(mu, x):
     return ((2.71828**(-1*mu))*(mu**x))/(math.factorial(x))
@@ -95,14 +103,14 @@ def expected_value(mu):
     return (poisson_list.index(max(poisson_list)), poisson_list)
 
 while True:
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.utcnow().strftime("%Y-%m-%d")
     league_results = get_results_for_league(LEAGUE_ID_HISTORIC)
     league_averages = get_league_averages(league_results)
     fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 
     for fixture in fixtures:
-        delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.now()).total_seconds()
+        delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.utcnow()).total_seconds()
         make_prediction(delay, fixture)
 
-    midnight = datetime.combine((datetime.today() + timedelta(days=1)), dt_time.min)
-    time.sleep(seconds_to(midnight))
+    midnight = datetime.combine((datetime.utcnow() + timedelta(days=1)), dt_time.min)
+    wait(seconds_to(midnight))
