@@ -1,4 +1,6 @@
 import os, sys
+import requests
+from io import BytesIO
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -10,8 +12,10 @@ def pretty_percent(percent):
 
 def add_teams(base, home_team, away_team):
     # open team crests and paste into final scoreline prediction positions
-    home_img = Image.open("src/img/teams/{}.png".format(home_team)).convert("RGBA")
-    away_img = Image.open("src/img/teams/{}.png".format(away_team)).convert("RGBA")
+    home_team_crest = requests.get(home_team.logo_url)
+    away_team_crest = requests.get(away_team.logo_url)
+    home_img = Image.open(BytesIO(home_team_crest.content)).convert("RGBA")
+    away_img = Image.open(BytesIO(away_team_crest.content)).convert("RGBA")
     home_img = home_img.resize((300, 300), Image.ANTIALIAS)
     away_img = away_img.resize((300, 300), Image.ANTIALIAS)
     base.paste(home_img, (450, 935), mask=home_img)

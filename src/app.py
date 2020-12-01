@@ -13,7 +13,7 @@ from utils import headers
 twitter_client = TwitterClient()
 load_dotenv()
 LEAGUE_ID = os.getenv("LEAGUE_ID")
-LEAGUE_ID_HISTORIC = os.getenv("LEAGUE_ID_HISTORIC")
+LEAGUE_ID_PREV = os.getenv("LEAGUE_ID_PREV")
 
 def wait(seconds):
     loader = "◄▲►▼"
@@ -67,10 +67,10 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    time.sleep(max(delay, 0))
+    # time.sleep(max(delay, 0))
     
-    home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'])
-    away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'])
+    home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'], fixture['homeTeam']['logo'])
+    away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'], fixture['awayTeam']['logo'])
 
     home_goals = predict_goals(home_team.home_atk, away_team.away_def, league_averages['home_goals'])
     away_goals = predict_goals(away_team.away_atk, home_team.home_def, league_averages['away_goals'])
@@ -87,7 +87,7 @@ def make_prediction(delay, fixture):
         Team.shorthand[away_team.name]
     )
 
-    build_image(home_team.name, away_team.name, home_poisson, away_poisson)
+    build_image(home_team, away_team, home_poisson, away_poisson)
     media = twitter_client.upload_image("src/img/prediction.png")
     twitter_client.tweet(prediction, media)
     print(prediction)
@@ -103,8 +103,8 @@ def expected_value(mu):
     return (poisson_list.index(max(poisson_list)), poisson_list)
 
 while True:
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    league_results = get_results_for_league(LEAGUE_ID_HISTORIC)
+    today = "2020-11-30" # datetime.utcnow().strftime("%Y-%m-%d")
+    league_results = get_results_for_league(LEAGUE_ID_PREV)
     league_averages = get_league_averages(league_results)
     fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 

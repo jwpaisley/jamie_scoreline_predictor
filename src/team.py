@@ -1,13 +1,16 @@
 import requests
+import collections
 import os
 from dotenv import load_dotenv
 from utils import headers
 
 load_dotenv()
 FIXTURES = os.getenv("FIXTURES")
+FORM_MATCHES = int(os.getenv("FORM_MATCHES"))
+FORM_WEIGHT = int(os.getenv("FORM_WEIGHT"))
 
 class Team:
-    shorthand = {
+    premier_league_shorthand = {
         "Arsenal": "ARS",
         "Aston Villa": "AVL",
         "Brighton": "BHA",
@@ -30,9 +33,12 @@ class Team:
         "Wolves": "WOL"
     }
 
-    def __init__(self, id, name):
+    shorthand = collections.defaultdict(list, premier_league_shorthand)
+
+    def __init__(self, id, name, logo_url):
         self.id = id
         self.name = name
+        self.logo_url = logo_url
         self.get_recent_fixtures()
         self.calc_atk()
         self.calc_def()
@@ -49,14 +55,14 @@ class Team:
     def calc_atk(self):
         home_goals, away_goals = 0.0, 0.0
         home_games, away_games = 0, 0
-        for fixture in self.recent_fixtures:
+        for idx, fixture in enumerate(self.recent_fixtures):
             if fixture['status'] == 'Match Finished':
                 if fixture['homeTeam']['team_id'] == self.id:
-                    home_games += 1
-                    home_goals += fixture['goalsHomeTeam']
+                    home_games += FORM_WEIGHT if idx < FORM_MATCHES else 1
+                    home_goals += fixture['goalsHomeTeam'] * FORM_WEIGHT if idx < FORM_MATCHES else fixture['goalsHomeTeam']
                 else:
-                    away_games += 1
-                    away_goals += fixture['goalsAwayTeam']
+                    away_games += FORM_WEIGHT if idx < FORM_MATCHES else 1
+                    away_goals += fixture['goalsAwayTeam'] * FORM_WEIGHT if idx < FORM_MATCHES else fixture['goalsAwayTeam']
 
         self.home_atk = home_goals / home_games
         self.away_atk = away_goals / away_games
@@ -64,14 +70,14 @@ class Team:
     def calc_def(self):
         home_goals, away_goals = 0.0, 0.0
         home_games, away_games = 0, 0
-        for fixture in self.recent_fixtures:
+        for idx, fixture in enumerate(self.recent_fixtures):
             if fixture['status'] == 'Match Finished':
                 if fixture['homeTeam']['team_id'] == self.id:
-                    away_games += 1
-                    away_goals += fixture['goalsAwayTeam']
+                    away_games += FORM_WEIGHT if idx < FORM_MATCHES else 1
+                    away_goals += fixture['goalsAwayTeam'] * FORM_WEIGHT if idx < FORM_MATCHES else fixture['goalsAwayTeam']
                 else:
-                    home_games += 1
-                    home_goals += fixture['goalsHomeTeam']
+                    home_games += FORM_WEIGHT if idx < FORM_MATCHES else 1
+                    home_goals += fixture['goalsHomeTeam'] * FORM_WEIGHT if idx < FORM_MATCHES else fixture['goalsHomeTeam']
                 
         self.home_def = home_goals / home_games
         self.away_def = away_goals / away_games
