@@ -89,7 +89,7 @@ def make_prediction(delay, fixture):
 
     build_image(home_team, away_team, home_poisson, away_poisson)
     media = twitter_client.upload_image("src/img/prediction.png")
-    twitter_client.tweet(prediction, media)
+    #twitter_client.tweet(prediction, media)
     print(prediction)
 
 def poisson(mu, x):
@@ -102,15 +102,11 @@ def expected_value(mu):
         poisson_list.append(P)
     return (poisson_list.index(max(poisson_list)), poisson_list)
 
-while True:
-    today = "2020-11-30" # datetime.utcnow().strftime("%Y-%m-%d")
-    league_results = get_results_for_league(LEAGUE_ID_PREV)
-    league_averages = get_league_averages(league_results)
-    fixtures = get_fixtures_by_day(LEAGUE_ID, today)
+today = "2020-11-30" #datetime.utcnow().strftime("%Y-%m-%d")
+league_results = get_results_for_league(LEAGUE_ID_PREV)
+league_averages = get_league_averages(league_results)
+fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 
-    for fixture in fixtures:
-        delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.utcnow()).total_seconds()
-        make_prediction(delay, fixture)
-
-    midnight = datetime.combine((datetime.utcnow() + timedelta(days=1)), dt_time.min)
-    wait(seconds_to(midnight))
+for fixture in fixtures:
+    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.utcnow()).total_seconds()
+    make_prediction(delay, fixture)
