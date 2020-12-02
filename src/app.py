@@ -12,15 +12,9 @@ from utils import headers
 
 twitter_client = TwitterClient()
 load_dotenv()
+dirname = os.path.dirname(__file__)
 LEAGUE_ID = os.getenv("LEAGUE_ID")
 LEAGUE_ID_PREV = os.getenv("LEAGUE_ID_PREV")
-
-def wait(seconds):
-    loader = "◄▲►▼"
-    while seconds > 0:
-        time.sleep(1)
-        seconds -= 1
-        print("{} delaying until midnight ({} sec)\r".format(loader[seconds % 4], seconds), end="")
 
 def get_utc_timestamp():
     return int(datetime.utcnow().timestamp())
@@ -67,7 +61,7 @@ def predict_goals(attack, defense, average):
     return average * rel_atk * rel_def
 
 def make_prediction(delay, fixture):
-    # time.sleep(max(delay, 0))
+    time.sleep(max(delay, 0))
     
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'], fixture['homeTeam']['logo'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'], fixture['awayTeam']['logo'])
@@ -88,8 +82,8 @@ def make_prediction(delay, fixture):
     )
 
     build_image(home_team, away_team, home_poisson, away_poisson)
-    media = twitter_client.upload_image("src/img/prediction.png")
-    #twitter_client.tweet(prediction, media)
+    media = twitter_client.upload_image(os.path.join(dirname, "img/prediction.png"))
+    twitter_client.tweet(prediction, media)
     print(prediction)
 
 def poisson(mu, x):
@@ -102,7 +96,7 @@ def expected_value(mu):
         poisson_list.append(P)
     return (poisson_list.index(max(poisson_list)), poisson_list)
 
-today = "2020-11-30" #datetime.utcnow().strftime("%Y-%m-%d")
+today = datetime.utcnow().strftime("%Y-%m-%d")
 league_results = get_results_for_league(LEAGUE_ID_PREV)
 league_averages = get_league_averages(league_results)
 fixtures = get_fixtures_by_day(LEAGUE_ID, today)
