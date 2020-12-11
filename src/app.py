@@ -101,6 +101,7 @@ league_results = get_results_for_league(LEAGUE_ID_PREV)
 league_averages = get_league_averages(league_results)
 fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 
+print(str(today))
 for fixture in fixtures:
-    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=15) - datetime.utcnow()).total_seconds()
+    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=30) - datetime.utcnow()).total_seconds()
     make_prediction(delay, fixture)
