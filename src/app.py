@@ -1,16 +1,16 @@
-import requests
-import time
-import os
-import math
+import requests, time, os, math
 from datetime import datetime, timedelta, timezone, time as dt_time
 from dateutil import parser
 from dotenv import load_dotenv
 from team import Team
 from image import build_image
 from twitter import TwitterClient
+from sms import SMSClient
+from prediction import Prediction
 from utils import headers
 
 twitter_client = TwitterClient()
+sms_client = SMSClient()
 load_dotenv()
 dirname = os.path.dirname(__file__)
 LEAGUE_ID = os.getenv("LEAGUE_ID")
@@ -60,9 +60,7 @@ def predict_goals(attack, defense, average):
     rel_def = defense / average
     return average * rel_atk * rel_def
 
-def make_prediction(delay, fixture):
-    time.sleep(max(delay, 0))
-    
+def make_prediction(fixture):    
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'], fixture['homeTeam']['logo'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'], fixture['awayTeam']['logo'])
 
@@ -72,19 +70,13 @@ def make_prediction(delay, fixture):
     pred_home_goals, home_poisson = expected_value(home_goals)
     pred_away_goals, away_poisson = expected_value(away_goals)
 
-    prediction = 'Prediction: {} {}, {} {} #{}{} #PremierLeague'.format(
-        home_team.name, 
-        pred_home_goals, 
-        away_team.name, 
-        pred_away_goals,
-        Team.shorthand[home_team.name],
-        Team.shorthand[away_team.name]
-    )
+    return Prediction(home_team, away_team, pred_home_goals, pred_away_goals, home_poisson, away_poisson)
 
-    build_image(home_team, away_team, home_poisson, away_poisson)
-    media = twitter_client.upload_image(os.path.join(dirname, "img/prediction.png"))
+def tweet_prediction(prediction, delay):
+    time.sleep(max(delay, 0))
+    build_image(prediction.home_team, prediction.away_team, prediction.home_poisson, prediction.away_poisson)
+    media = twitter_client.upload_image(os.path.join(dirname, 'img/prediction.png'))
     twitter_client.tweet(prediction, media)
-    print(prediction)
 
 def poisson(mu, x):
     return ((2.71828**(-1*mu))*(mu**x))/(math.factorial(x))
@@ -102,6 +94,17 @@ league_averages = get_league_averages(league_results)
 fixtures = get_fixtures_by_day(LEAGUE_ID, today)
 
 print(str(today))
+predictions = []
 for fixture in fixtures:
+    predictions.append(make_prediction(fixture))
+
+sms = "Jamie's Predictions for " + today + ":"
+for prediction in predictions:
+    prediction_sms = prediction.to_sms_string()
+    sms += "\n" + prediction_sms
+    print(prediction_sms)
+sms_client.broadcast_sms(sms)
+
+for prediction in predictions:
     delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=30) - datetime.utcnow()).total_seconds()
-    make_prediction(delay, fixture)
+    tweet_prediction(prediction, delay)
