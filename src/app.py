@@ -1,4 +1,4 @@
-import requests, time, os, math
+import requests, time, os, math, threading
 from datetime import datetime, timedelta, timezone, time as dt_time
 from dateutil import parser
 from dotenv import load_dotenv
@@ -60,7 +60,7 @@ def predict_goals(attack, defense, average):
     rel_def = defense / average
     return average * rel_atk * rel_def
 
-def make_prediction(fixture):    
+def make_prediction(fixture):  
     home_team = Team(fixture['homeTeam']['team_id'], fixture['homeTeam']['team_name'], fixture['homeTeam']['logo'])
     away_team = Team(fixture['awayTeam']['team_id'], fixture['awayTeam']['team_name'], fixture['awayTeam']['logo'])
 
@@ -70,13 +70,15 @@ def make_prediction(fixture):
     pred_home_goals, home_poisson = expected_value(home_goals)
     pred_away_goals, away_poisson = expected_value(away_goals)
 
-    return Prediction(home_team, away_team, pred_home_goals, pred_away_goals, home_poisson, away_poisson)
+    return Prediction(home_team, away_team, pred_home_goals, pred_away_goals, home_poisson, away_poisson, datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00"))
 
-def tweet_prediction(prediction, delay):
+def tweet_prediction(prediction):
+    delay = (prediction.kickoff - timedelta(minutes=30) - datetime.utcnow()).total_seconds()
+    print(prediction.kickoff, delay)
     time.sleep(max(delay, 0))
     build_image(prediction.home_team, prediction.away_team, prediction.home_poisson, prediction.away_poisson)
     media = twitter_client.upload_image(os.path.join(dirname, 'img/prediction.png'))
-    twitter_client.tweet(prediction, media)
+    twitter_client.tweet(prediction.to_tweet_string(), media)
 
 def poisson(mu, x):
     return ((2.71828**(-1*mu))*(mu**x))/(math.factorial(x))
@@ -106,5 +108,4 @@ for prediction in predictions:
 sms_client.broadcast_sms(sms)
 
 for prediction in predictions:
-    delay = (datetime.strptime(fixture['event_date'], "%Y-%m-%dT%H:%M:%S+00:00") - timedelta(minutes=30) - datetime.utcnow()).total_seconds()
-    tweet_prediction(prediction, delay)
+    tweet_prediction(prediction)

@@ -1,13 +1,14 @@
 from team import Team
 
 class Prediction:
-    def __init__(self, home_team, away_team, pred_home_goals, pred_away_goals, home_poisson, away_poisson):
+    def __init__(self, home_team, away_team, pred_home_goals, pred_away_goals, home_poisson, away_poisson, kickoff):
         self.home_team = home_team
         self.away_team = away_team
         self.pred_home_goals = pred_home_goals
         self.pred_away_goals = pred_away_goals
         self.home_poisson = home_poisson
         self.away_poisson = away_poisson
+        self.kickoff = kickoff
 
     def to_tweet_string(self):
         return 'Prediction: {} {}, {} {} #{}{} #PremierLeague'.format(
