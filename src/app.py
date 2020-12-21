@@ -74,7 +74,6 @@ def make_prediction(fixture):
 
 def tweet_prediction(prediction):
     delay = (prediction.kickoff - timedelta(minutes=30) - datetime.utcnow()).total_seconds()
-    print(prediction.kickoff, delay)
     time.sleep(max(delay, 0))
     build_image(prediction.home_team, prediction.away_team, prediction.home_poisson, prediction.away_poisson)
     media = twitter_client.upload_image(os.path.join(dirname, 'img/prediction.png'))
@@ -107,5 +106,6 @@ for prediction in predictions:
     print(prediction_sms)
 sms_client.broadcast_sms(sms)
 
+i = 0
 for prediction in predictions:
     tweet_prediction(prediction)
