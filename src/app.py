@@ -99,13 +99,13 @@ predictions = []
 for fixture in fixtures:
     predictions.append(make_prediction(fixture))
 
-sms = "Jamie's Predictions for " + today + ":"
-for prediction in predictions:
-    prediction_sms = prediction.to_sms_string()
-    sms += "\n" + prediction_sms
-    print(prediction_sms)
-sms_client.broadcast_sms(sms)
+if len(predictions) > 0:
+    sms = ""
+    for prediction in predictions:
+        prediction_sms = prediction.to_sms_string()
+        sms += "\n" + prediction_sms
+        print(prediction_sms)
+    sms_client.broadcast_sms(sms)
 
-i = 0
-for prediction in predictions:
-    tweet_prediction(prediction)
+    for prediction in predictions:
+        tweet_prediction(prediction)
